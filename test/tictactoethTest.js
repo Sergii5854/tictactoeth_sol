@@ -45,7 +45,7 @@ contract('gameLib', (accounts)=>{
   });
 
   it("should join a second player", function() {
-    var id,instance;
+    var id, instance;
     return tictactoeth.deployed()
       .then((_instance)=>{
         instance = _instance;
