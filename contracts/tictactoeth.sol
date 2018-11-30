@@ -1,12 +1,12 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.24;
 import "./Ownable.sol";
 import "./gameLib.sol";
 
 contract tictactoeth is Ownable{
 
   uint public fees;
-  function collect() external onlyOwner(){
-    _owner.transfer( fees );
+  function collectFees() external onlyOwner(){
+    owner().transfer( fees );
     fees = 0;
   }
 

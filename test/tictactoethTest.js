@@ -1,27 +1,27 @@
-const gameLibrary = artifacts.require("./gameLib.sol");
+const gameLib = artifacts.require("./gameLib.sol");
 const tictactoeth = artifacts.require("./tictactoeth.sol");
 var mothership;
 
-contract('gameLibrary', (accounts)=>{
+contract('gameLib', (accounts)=>{
 
-  it("should initialize a gameLibrary contract",function(){
-    return gameLibrary.deployed().then(()=>{
-      tictactoeth.link( gameLibrary );
-      return tictactoeth.new({account:accounts[0]}).then((mother)=>{
-        mothership = mother;
+  it("should deploy tictactoeth contract",function(){
+    var instance;
+    return tictactoeth.deployed()
+      .then((_instance)=>{
+        instance = _instance;
+        return instance.fees.call()
+      }).then((fees)=>{
+        assert.equal( fees.toNumber(), 0, "Fees not 0");
+        return instance.numGames.call()
+      }).then((numGames)=>{
+        assert.equal( numGames.toNumber(), 0, "Number of games not 0");
+        return instance.owner.call()
+      }).then((owner)=>{
+        assert.equal( owner, accounts[0], "Owner not initial account");
       });
-    });
   });
 
-  it("should initialize tictactoeth contract", function() { // Upgrade to await?
-    return mothership.numGames.call().then((number)=>{
-      assert.equal( number.toNumber(), 0, "Number of games not 0.");
-      return mothership.author.call().then((author)=>{
-        assert.equal( author, accounts[0], "Author is not initial account");
-      });
-    });
-  });
-
+/*
   it("should create a new game", function() { // Upgrade to await?
     return mothership.newGame( 200,300000000, 1, {from: accounts[1]} ).then((trx)=>{
       return mothership.numGames.call().then((number)=>{
@@ -42,6 +42,7 @@ contract('gameLibrary', (accounts)=>{
       });
     });
   });
+
   it("should make a move",function(){
     return mothership.newMove.sendTransaction(0,5,{from:accounts[1]}).then((trx)=>{
       return mothership.games.call(0).then((game)=>{
@@ -54,4 +55,6 @@ contract('gameLibrary', (accounts)=>{
       });
     });
   });
+*/
+
 });

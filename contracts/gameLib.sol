@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.24;
 
 library gameLib{
 
@@ -38,7 +38,7 @@ library gameLib{
     return true;
   }
 
-  function isExpired( game storage gm ) public returns(bool){
+  function isExpired( game storage gm ) public view returns(bool){
     return (1 < gm.numMoves) && (gm.deadline < block.timestamp);
   }
 
