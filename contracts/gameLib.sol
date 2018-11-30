@@ -6,8 +6,8 @@ library gameLib{
   struct game{
     address playerX;
     address playerO;
-    uint wager;
     uint bet;
+    uint wager;
     uint turn;
     uint deadline;
     uint8 numMoves;

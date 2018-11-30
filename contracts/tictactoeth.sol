@@ -23,17 +23,17 @@ contract tictactoeth is Ownable{
     }
   }
 
-  function newGame( uint bet, uint turn, uint8 move ) payable external returns( uint ){
+  function newGame( uint wager, uint turn, uint8 move ) payable external returns( uint ){
 
     require( 100 < msg.value );
-    require( 100 < bet );
+    require( 100 < wager );
     require( 300 < turn && turn < 864000 );
     require( move < 9 );
 
     gameLib.mark[9] memory moves;
     moves[move]=gameLib.mark.pX;
 
-    games.push( gameLib.game( msg.sender, 0, msg.value, bet, turn, 0, 1, moves ) );
+    games.push( gameLib.game( msg.sender, 0, msg.value, wager, turn, 0, 1, moves ) );
     numGames++;
 
     emit newMoveEvent( numGames - 1 );
@@ -47,12 +47,12 @@ contract tictactoeth is Ownable{
 
   function joinGame( uint id, uint8 move ) payable external validGame(id) returns (bool){
 
-    require( games[id].bet <= msg.value );
+    require( games[id].wager <= msg.value );
 
     require( games[id].join( msg.sender, move ) );
     emit newMoveEvent( id );
 
-    if( games[id].bet < msg.value ) msg.sender.transfer( msg.value - games[id].bet );
+    if( games[id].wager < msg.value ) msg.sender.transfer( msg.value - games[id].wager );
     return true;
   }
 
@@ -83,21 +83,21 @@ contract tictactoeth is Ownable{
     uint payO;
 
     if(code==0){ // Cancel
-      payX = gm.wager; 
+      payX = gm.bet; 
     }
     else if(code==1){ // Win
-      if( gm.numMoves % 2 == 1 ) payX = gm.wager + gm.bet;
-      else payO = gm.wager + gm.bet;
+      if( gm.numMoves % 2 == 1 ) payX = gm.bet + gm.wager;
+      else payO = gm.bet + gm.wager;
     }
     else if(code==2){ //  Stalemate
-      vig = (gm.wager / 100) + (gm.bet / 100);
-      payX = gm.wager - (gm.wager / 100);
-      payO = gm.bet - (gm.bet / 100); 
+      vig = (gm.bet / 100) + (gm.wager / 100);
+      payX = gm.bet - (gm.bet / 100);
+      payO = gm.wager - (gm.wager / 100); 
     }
     else if(code==3){ // Timeout
-      vig = (gm.wager + gm.bet) / 100;
-      if( gm.numMoves % 2 == 1 ) payX = gm.wager + gm.bet - vig;
-      else payO = gm.wager + gm.bet - vig;
+      vig = (gm.bet + gm.wager) / 100;
+      if( gm.numMoves % 2 == 1 ) payX = gm.bet + gm.wager - vig;
+      else payO = gm.bet + gm.wager - vig;
     }
 
     games[id].turn = 0;
