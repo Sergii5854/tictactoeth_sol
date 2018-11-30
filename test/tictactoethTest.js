@@ -45,7 +45,7 @@ contract('gameLib', (accounts)=>{
   });
 
   it("should join a second player", function() {
-    var id, instance;
+    var id,instance;
     return tictactoeth.deployed()
       .then((_instance)=>{
         instance = _instance;
@@ -54,6 +54,7 @@ contract('gameLib', (accounts)=>{
         return instance.numGames.call();
       }).then((numGames)=>{
         id = numGames - 1;
+        assert(numGames.toNumber(),2,"Number of games not 2")
         return instance.joinGame.sendTransaction(id,6,{from:accounts[2],value:123});
       }).then((trx)=>{
         return instance.games.call(id);
@@ -81,6 +82,7 @@ contract('gameLib', (accounts)=>{
         return instance.numGames.call();
       }).then((numGames)=>{
         id = numGames - 1;
+        assert(numGames.toNumber(),3,"Number of games not 3")
         return instance.joinGame.sendTransaction(id,6,{from:accounts[2],value:123});
       }).then((trx)=>{
         return instance.newMove.sendTransaction(id,5,{from:accounts[1]});
