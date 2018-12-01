@@ -62,7 +62,7 @@ library gameLib{
     return (1 < gm.numMoves) && (gm.deadline < block.timestamp);
   }
 
-  function isStalemate( game storage gm ) public view returns(bool){
+  function isOver( game storage gm ) public view returns(bool){
     return 8 < gm.numMoves;
   }
 

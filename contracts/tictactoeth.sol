@@ -64,7 +64,7 @@ contract tictactoeth is Ownable{
     require( games[id].newMove( msg.sender, move ) );
 
     if( games[id].isWin() ) return endGame(id,1);
-    else if( games[id].isStalemate() ) return endGame(id,2);
+    else if( games[id].isOver() ) return endGame(id,2);
 
     emit gameEvent(id);
     return true;
