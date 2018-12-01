@@ -13,9 +13,15 @@ contract tictactoeth is Ownable{
   uint public numGames;
   gameLib.game[] public games;
   using gameLib for gameLib.game;
-  event newMoveEvent(
+
+  event gameEvent(
       uint indexed _id
   );
+
+  modifier validGame(uint id){
+    require( games[id].isValid() );
+    _;
+  }
 
   function getMoves(uint id) external view returns (uint8[9] moves){
     for(uint8 i=0; i < 9; i++){
@@ -36,13 +42,8 @@ contract tictactoeth is Ownable{
     games.push( gameLib.game( msg.sender, 0, msg.value, wager, turn, 0, 1, moves ) );
     numGames++;
 
-    emit newMoveEvent( numGames - 1 );
+    emit gameEvent( numGames - 1 );
     return( numGames - 1 );
-  }
-
-  modifier validGame(uint id){
-    require( 0 != games[id].turn );
-    _;
   }
 
   function joinGame( uint id, uint8 move ) payable external validGame(id) returns (bool){
@@ -50,7 +51,7 @@ contract tictactoeth is Ownable{
     require( games[id].wager <= msg.value );
 
     require( games[id].join( msg.sender, move ) );
-    emit newMoveEvent( id );
+    emit gameEvent( id );
 
     if( games[id].wager < msg.value ) msg.sender.transfer( msg.value - games[id].wager );
     return true;
@@ -58,20 +59,20 @@ contract tictactoeth is Ownable{
 
   function newMove( uint id, uint8 move ) external validGame(id) returns(bool){
 
-    if( games[id].isExpired() ) return endGame(id,3);
+    if( games[id].isTimeout() ) return endGame(id,3);
 
     require( games[id].newMove( msg.sender, move ) );
 
-    if( games[id].isWin() ) return endGame( id,1 );
-    else if( 9 == games[id].numMoves ) return endGame( id, 2 );
+    if( games[id].isWin() ) return endGame(id,1);
+    else if( games[id].isStalemate() ) return endGame(id,2);
 
-    emit newMoveEvent(id);
+    emit gameEvent(id);
     return true;
   }
 
   function cancelGame(uint id) external validGame(id) returns (bool){
-    require( 1 == games[id].numMoves );
     require( msg.sender == games[id].playerX );
+    require( 1 == games[id].numMoves );
     return endGame( id, 0 );
   }
 
@@ -100,12 +101,11 @@ contract tictactoeth is Ownable{
       else payO = gm.bet + gm.wager - vig;
     }
 
-    games[id].turn = 0;
-    games[id].deadline = code; 
+    games[id].end(code); 
     fees += vig;
     gm.playerX.transfer(payX);
     gm.playerO.transfer(payO);
-    emit newMoveEvent(id);
+    emit gameEvent(id);
     return true;
   }
 }

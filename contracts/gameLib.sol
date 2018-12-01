@@ -38,10 +38,6 @@ library gameLib{
     return true;
   }
 
-  function isExpired( game storage gm ) public view returns(bool){
-    return (1 < gm.numMoves) && (gm.deadline < block.timestamp);
-  }
-
   function isWin( game storage gm ) public view returns( bool ){
 
     if( gm.numMoves < 5 ) return false;
@@ -60,5 +56,22 @@ library gameLib{
       return true;
     }
     return false;
+  }
+
+  function isTimeout( game storage gm ) public view returns(bool){
+    return (1 < gm.numMoves) && (gm.deadline < block.timestamp);
+  }
+
+  function isStalemate( game storage gm ) public view returns(bool){
+    return 8 < gm.numMoves;
+  }
+
+  function isValid( game storage gm ) public view returns(bool){
+    return 0 < gm.turn;
+  }
+
+  function end( game storage gm, uint8 code) public{
+    gm.turn = 0;
+    gm.deadline = code;
   }
 }
