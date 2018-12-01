@@ -6,6 +6,6 @@ These are the solidity contracts for tictactoeth developed with the truffle fram
 
 * [Configure truffle.js](https://truffleframework.com/docs/truffle/reference/configuration) as needed.
 * Run the following commands in the root directoy of the repository:
-** `npm install`
-** `truffle deploy
-** `truffle test`
+  * `npm install`
+  * `truffle deploy`
+  * `truffle test`
