@@ -71,8 +71,7 @@ contract tictactoeth is Ownable{
   }
 
   function cancelGame(uint id) external validGame(id) returns (bool){
-    require( msg.sender == games[id].playerX );
-    require( 1 == games[id].numMoves );
+    require( 1 == games[id].numMoves && msg.sender == games[id].playerX );
     return endGame( id, 0 );
   }
 
