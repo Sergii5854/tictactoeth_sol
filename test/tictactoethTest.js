@@ -21,13 +21,15 @@ contract('gameLib', (accounts)=>{
       });
   });
 
-  it("should create a new game", function() {
-    var instance;
+  it("should create and cancel a game", function() { // Code 0
+    var instance, origBalance;
     return tictactoeth.deployed()
       .then((_instance)=>{
         instance = _instance;
+        origBalance = web3.eth.getBalance(instance.address).toNumber();
         return instance.newGame.sendTransaction(123,247365,7,{value:456});
       }).then((trx)=>{
+        assert.equal(web3.eth.getBalance(instance.address).toNumber(),456 + origBalance,"Contract balance incorrect")
         return instance.numGames.call();
       }).then((numGames)=>{
         assert.equal( numGames.toNumber(), 1, "Number of games not 1");
@@ -37,69 +39,68 @@ contract('gameLib', (accounts)=>{
           assert.equal(game[2].toNumber(),456,"Bet not 456");
           assert.equal(game[3].toNumber(),123,"Wager not 123");
           assert.equal(game[4].toNumber(),247365,"Turn length not 247365");
+          assert.equal(game[5].toNumber(),0,"Deadline not 0");
           assert.equal(game[6].toNumber(),1,"Number of moves not 1");
           return instance.getMoves.call(0)
       }).then((moves)=>{
           assert.equal(moves[7].toNumber(),1,"Move not set")
+          return instance.cancelGame.sendTransaction(0);
+      }).then((trx)=>{
+          assert.equal(web3.eth.getBalance(instance.address).toNumber(),origBalance,"Contract balance incorrect")
+          return instance.games.call(0);
+      }).then((game)=>{
+          assert.equal(game[4].toNumber(),0,"Turn not 0");
+          assert.equal(game[5].toNumber(),0,"Code not 0");
       });
   });
 
-  it("should join a second player", function() {
-    var id, instance;
+  it("should play to a win", function() { // Code 1
+    var id, instance, origBalance;
     return tictactoeth.deployed()
       .then((_instance)=>{
         instance = _instance;
-        return instance.newGame.sendTransaction(123,247365,7,{from:accounts[1],value:456});
+        origBalance = web3.eth.getBalance(instance.address).toNumber();
+        return instance.newGame.sendTransaction(123,247365,0,{from:accounts[1],value:456});
       }).then((trx)=>{
+        assert.equal(web3.eth.getBalance(instance.address).toNumber(),456+origBalance,"Contract balance incorrect")
         return instance.numGames.call();
       }).then((numGames)=>{
         id = numGames - 1;
-        assert(numGames.toNumber(),2,"Number of games not 2")
-        return instance.joinGame.sendTransaction(id,6,{from:accounts[2],value:123});
+        return instance.joinGame.sendTransaction(id,8,{from:accounts[2],value:123});
       }).then((trx)=>{
+        assert.equal(web3.eth.getBalance(instance.address).toNumber(),123+456+origBalance,"Contract balance incorrect")
         return instance.games.call(id);
       }).then((game)=>{
-          assert.equal(game[0],accounts[1],"playerX not account 1");
-          assert.equal(game[1],accounts[2],"playerO not account 2");
-          assert.equal(game[2].toNumber(),456,"Bet not 456");
-          assert.equal(game[3].toNumber(),123,"Wager not 123");
-          assert.equal(game[4].toNumber(),247365,"Turn length not 247365");
-          assert.equal(game[6].toNumber(),2,"Number of moves not 2");
-          return instance.getMoves.call(id)
+        assert.equal(game[0],accounts[1],"playerX not account 1");
+        assert.equal(game[1],accounts[2],"playerO not account 2");
+        assert.equal(game[2].toNumber(),456,"Bet not 456");
+        assert.equal(game[3].toNumber(),123,"Wager not 123");
+        assert.equal(game[4].toNumber(),247365,"Turn length not 247365");
+        assert.equal(game[6].toNumber(),2,"Number of moves not 2");
+        return instance.newMove.sendTransaction(id,1,{from:accounts[1]});
+      }).then((trx)=>{
+        return instance.newMove.sendTransaction(id,7,{from:accounts[2]});
+      }).then((trx)=>{
+        return instance.newMove.sendTransaction(id,2,{from:accounts[1]});
+      }).then((trx)=>{   
+        assert.equal(web3.eth.getBalance(instance.address).toNumber(),origBalance,"Contract balance incorrect")
+        return instance.getMoves.call(id)
       }).then((moves)=>{
-          assert.equal(moves[7].toNumber(),1,"playerX move not set")
-          assert.equal(moves[6].toNumber(),2,"playerO move not set")
+        assert.equal(moves[0].toNumber(),1,"Move 1 not set")
+        assert.equal(moves[8].toNumber(),2,"Move 2 not set")
+        assert.equal(moves[1].toNumber(),1,"Move 3 not set")
+        assert.equal(moves[7].toNumber(),2,"Move 4 not set")
+        assert.equal(moves[2].toNumber(),1,"Move 5 not set")
+        return instance.games.call(id);
+      }).then((game)=>{
+        assert.equal(game[4].toNumber(),0,"Turn not 0");
+        assert.equal(game[5].toNumber(),1,"Code not 1");
       });
   });
 
-  it("should make a move", function() {
-    var id, instance;
-    return tictactoeth.deployed()
-      .then((_instance)=>{
-        instance = _instance;
-        return instance.newGame.sendTransaction(123,247365,7,{from:accounts[1],value:456});
-      }).then((trx)=>{
-        return instance.numGames.call();
-      }).then((numGames)=>{
-        id = numGames - 1;
-        assert(numGames.toNumber(),3,"Number of games not 3")
-        return instance.joinGame.sendTransaction(id,6,{from:accounts[2],value:123});
-      }).then((trx)=>{
-        return instance.newMove.sendTransaction(id,5,{from:accounts[1]});
-      }).then((trx)=>{
-        return instance.games.call(id);
-      }).then((game)=>{
-          assert.equal(game[0],accounts[1],"playerX not account 1");
-          assert.equal(game[1],accounts[2],"playerO not account 2");
-          assert.equal(game[2].toNumber(),456,"Bet not 456");
-          assert.equal(game[3].toNumber(),123,"Wager not 123");
-          assert.equal(game[4].toNumber(),247365,"Turn length not 247365");
-          assert.equal(game[6].toNumber(),3,"Number of moves not 3");
-          return instance.getMoves.call(id)
-      }).then((moves)=>{
-          assert.equal(moves[7].toNumber(),1,"playerX move not set")
-          assert.equal(moves[6].toNumber(),2,"playerO move not set")
-          assert.equal(moves[5].toNumber(),1,"New move not set")
-      });
+  it("should play to a stalemate", function() { // Code 2
+  });
+
+  it("should timeout", function() { // Code 3
   });
 });
