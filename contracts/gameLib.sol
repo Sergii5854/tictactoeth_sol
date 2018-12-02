@@ -15,8 +15,6 @@ library gameLib{
   }
 
   function join( game storage gm, address playerO, uint8 move) public returns (bool){
-    if( 1 < gm.numMoves || 8 < move || mark.blank != gm.moves[move] ) return false;
-
     gm.numMoves++;
     gm.deadline = block.timestamp + gm.turn;
     gm.moves[move] = mark.pO;
@@ -24,17 +22,10 @@ library gameLib{
     return true;
   }
 
-  function newMove( game storage gm, address player, uint8 move) public returns (bool){
-    if(  8 < move 
-      || mark.blank != gm.moves[move]
-      || (gm.numMoves % 2 == 0 && player != gm.playerX )
-      || (gm.numMoves % 2 == 1 && player != gm.playerO )
-    )
-      return false;
-
+  function newMove( game storage gm, uint8 move) public returns (bool){
     gm.numMoves++;
-    gm.deadline = block.timestamp + gm.turn;
     gm.moves[move] = mark( 2 - ( gm.numMoves % 2 ) );
+    gm.deadline = block.timestamp + gm.turn;
     return true;
   }
 
@@ -58,6 +49,14 @@ library gameLib{
     return false;
   }
 
+  function isValidMove( game storage gm, uint8 move ) public view returns(bool){
+    return move < 9 && gm.moves[move] == mark.blank;
+  }
+  function isPlayerTurn( game storage gm, address player ) public view returns(bool){
+    return (gm.numMoves % 2 == 0 && player == gm.playerX ) 
+            || (gm.numMoves % 2 == 1 && player == gm.playerO );
+  }
+
   function isTimeout( game storage gm ) public view returns(bool){
     return (1 < gm.numMoves) && (gm.deadline < block.timestamp);
   }
@@ -66,7 +65,7 @@ library gameLib{
     return 8 < gm.numMoves;
   }
 
-  function isValid( game storage gm ) public view returns(bool){
+  function isValidGame( game storage gm ) public view returns(bool){
     return 0 < gm.turn;
   }
 

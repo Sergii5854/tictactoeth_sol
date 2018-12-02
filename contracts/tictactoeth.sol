@@ -19,7 +19,17 @@ contract tictactoeth is Ownable{
   );
 
   modifier validGame(uint id){
-    require( games[id].isValid() );
+    require( games[id].isValidGame() );
+    _;
+  }
+
+  modifier playerTurn(uint id){
+    require( games[id].isPlayerTurn(msg.sender) );
+    _;
+  }
+
+  modifier validMove(uint id, uint8 move){
+    require( games[id].isValidMove(move) );
     _;
   }
 
@@ -46,9 +56,9 @@ contract tictactoeth is Ownable{
     return( numGames - 1 );
   }
 
-  function joinGame( uint id, uint8 move ) payable external validGame(id) returns (bool){
+  function joinGame( uint id, uint8 move ) payable external validGame(id) validMove(id,move) returns (bool){
 
-    require( games[id].wager <= msg.value );
+    require( 1 == games[id].numMoves && games[id].wager <= msg.value );
 
     require( games[id].join( msg.sender, move ) );
     emit gameEvent( id );
@@ -57,11 +67,11 @@ contract tictactoeth is Ownable{
     return true;
   }
 
-  function newMove( uint id, uint8 move ) external validGame(id) returns(bool){
+  function newMove( uint id, uint8 move ) external validGame(id) validMove(id,move) playerTurn(id) returns(bool){
 
     if( games[id].isTimeout() ) return endGame(id,3);
 
-    require( games[id].newMove( msg.sender, move ) );
+    require( games[id].newMove( move ) );
 
     if( games[id].isWin() ) return endGame(id,1);
     else if( games[id].isOver() ) return endGame(id,2);
