@@ -13,26 +13,21 @@ contract tictactoeth is Ownable{
   uint public numGames;
   gameLib.game[] public games;
   using gameLib for gameLib.game;
-
   event gameEvent(
-      uint indexed _id
+      uint indexed id
   );
-
   modifier validGame(uint id){
     require( games[id].isValidGame() );
     _;
   }
-
   modifier playerTurn(uint id){
     require( games[id].isPlayerTurn(msg.sender) );
     _;
   }
-
   modifier validMove(uint id, uint8 move){
     require( games[id].isValidMove(move) );
     _;
   }
-
   function getMoves(uint id) external view returns (uint8[9] moves){
     for(uint8 i=0; i < 9; i++){
       moves[i] = uint8( games[id].moves[i] );
@@ -40,7 +35,6 @@ contract tictactoeth is Ownable{
   }
 
   function newGame( uint wager, uint turn, uint8 move ) payable external returns( uint ){
-
     require( 100 < msg.value );
     require( 100 < wager );
     require( 300 < turn && turn < 864000 );
@@ -51,13 +45,16 @@ contract tictactoeth is Ownable{
 
     games.push( gameLib.game( msg.sender, 0, msg.value, wager, turn, 0, 1, moves ) );
     numGames++;
-
     emit gameEvent( numGames - 1 );
     return( numGames - 1 );
   }
 
-  function joinGame( uint id, uint8 move ) payable external validGame(id) validMove(id,move) returns (bool){
+  function cancelGame(uint id) external validGame(id) returns (bool){
+    require( 1 == games[id].numMoves && msg.sender == games[id].playerX );
+    return endGame( id, 0 );
+  }
 
+  function joinGame( uint id, uint8 move ) payable external validGame(id) validMove(id,move) returns (bool){
     require( 1 == games[id].numMoves && games[id].wager <= msg.value );
 
     require( games[id].join( msg.sender, move ) );
@@ -68,7 +65,6 @@ contract tictactoeth is Ownable{
   }
 
   function newMove( uint id, uint8 move ) external validGame(id) validMove(id,move) playerTurn(id) returns(bool){
-
     if( games[id].isTimeout() ) return endGame(id,3);
 
     require( games[id].newMove( move ) );
@@ -80,17 +76,11 @@ contract tictactoeth is Ownable{
     return true;
   }
 
-  function cancelGame(uint id) external validGame(id) returns (bool){
-    require( 1 == games[id].numMoves && msg.sender == games[id].playerX );
-    return endGame( id, 0 );
-  }
-
   function endGame(uint id, uint8 code) private returns (bool){
-
-    gameLib.game memory gm = games[id];
     uint vig;
     uint payX;
     uint payO;
+    gameLib.game memory gm = games[id];
 
     if(code==0){ // Cancel
       payX = gm.bet; 
