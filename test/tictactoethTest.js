@@ -3,7 +3,8 @@ const tictactoeth = artifacts.require("./tictactoeth.sol");
 const cf = {
   "bet":700,
   "wager":500,
-  "turn": 10000
+  "turn": 10000,
+  "feeCut":100
 }
 
 function newGame(instance, playerX, move){
@@ -142,7 +143,7 @@ contract('gameLib', (accounts)=>{
       }).then((trx)=>{
         return instance.newMove.sendTransaction(id,4,{from:accounts[1]});
       }).then((trx)=>{   
-        //assert.equal(web3.eth.getBalance(instance.address).toNumber(),origBalance,"Contract balance incorrect")
+        assert.equal(web3.eth.getBalance(instance.address).toNumber(),origBalance + ((cf.bet+cf.wager)/cf.feeCut),"Contract balance incorrect")
         return instance.getMoves.call(id)
       }).then((moves)=>{
         assert.equal(moves[0].toNumber(),1,"Move 1 not set")
