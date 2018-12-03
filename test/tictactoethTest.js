@@ -28,8 +28,8 @@ function newGame(instance, playerX, move){
       assert.equal(game[6].toNumber(),1,"Number of moves not 1");
       return instance.getMoves.call(id)
     }).then((moves)=>{
-        assert.equal(moves[move].toNumber(),1,"Move not set")
-        return id;
+      assert.equal(moves[move].toNumber(),1,"Move not set")
+      return id;
     });
 }
 
@@ -39,12 +39,12 @@ function joinGame(instance, playerO, move, id){
   return instance.joinGame.sendTransaction(id,move,{from:playerO,value:cf.wager})
     .then((trx)=>{
       assert.equal(web3.eth.getBalance(instance.address).toNumber(),cf.wager+origBalance,"Contract balance incorrect")
-      return instance.numGames.call();
-    }).then((numGames)=>{
-      id = numGames.toNumber() - 1;
       return instance.games.call(id);
     }).then((game)=>{
       assert.equal(game[1],playerO,"playerO account incorrect");
+      return instance.getMoves.call(id)
+    }).then((moves)=>{
+      assert.equal(moves[move].toNumber(),2,"Move not set")
     });
 }
 
