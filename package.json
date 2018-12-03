@@ -1,6 +1,6 @@
 {
   "name": "tictactoeth_sol",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "truffle.js",
   "directories": {
