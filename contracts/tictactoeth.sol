@@ -9,6 +9,10 @@ contract tictactoeth is Ownable{
     owner().transfer( fees );
     fees = 0;
   }
+  uint constant feeDivisor = 100;
+  uint constant minBet = 100;
+  uint constant minTurn = 280; // approx. 5 minutes
+  uint constant maxTurn = 864020; // approx. 10 days 
 
   uint public numGames;
   gameLib.game[] public games;
@@ -35,9 +39,9 @@ contract tictactoeth is Ownable{
   }
 
   function newGame( uint wager, uint turn, uint8 move ) payable external returns( uint ){
-    require( 100 < msg.value );
-    require( 100 < wager );
-    require( 300 < turn && turn < 864000 );
+    require( minBet < msg.value ); 
+    require( minBet < wager );
+    require( minTurn < turn && turn < maxTurn );
     require( move < 9 );
 
     gameLib.mark[9] memory moves;
@@ -90,12 +94,12 @@ contract tictactoeth is Ownable{
       else payO = gm.bet + gm.wager;
     }
     else if(code==2){ //  Stalemate
-      vig = (gm.bet / 100) + (gm.wager / 100);
-      payX = gm.bet - (gm.bet / 100);
-      payO = gm.wager - (gm.wager / 100); 
+      vig = (gm.bet / feeDivisor) + (gm.wager / feeDivisor);
+      payX = gm.bet - (gm.bet / feeDivisor);
+      payO = gm.wager - (gm.wager / feeDivisor); 
     }
     else if(code==3){ // Timeout
-      vig = (gm.bet + gm.wager) / 100;
+      vig = (gm.bet + gm.wager) / feeDivisor;
       if( gm.numMoves % 2 == 1 ) payX = gm.bet + gm.wager - vig;
       else payO = gm.bet + gm.wager - vig;
     }
